@@ -176,7 +176,7 @@ export default function Layout({ children, currentPageName }) {
 
   const unreadCount = notifications.length;
 
-  const handleLogout = () => signOut();
+  const handleLogout = () => signOut("/SignIn");
 
   const markAllRead = async () => {
     if (!user) return;
