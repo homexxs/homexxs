@@ -91,24 +91,27 @@ export default function Register() {
   const canFinish = profile.full_name && profile.phone && profile.address && selectedPlan;
 
   // ── Step 1a: Register account and send Base44 OTP ──
-  const handleRegister = async (e) => {
+const handleRegister = async (e) => {
     e.preventDefault();
     if (!canRegister) return;
     setRegistering(true);
     setAuthError("");
     try {
       await signUp({ email: creds.email, password: creds.password });
+      // Email confirmation is OFF — sign in immediately, skip OTP
+      try { await signInWithPassword(creds.email, creds.password); } catch { /* already logged in */ }
     } catch (err) {
       const msg = err?.message || "";
-      // If already registered, proceed anyway (may not have verified yet)
       if (!msg.toLowerCase().includes("already") && !msg.toLowerCase().includes("exist")) {
         setAuthError(msg || "Registration failed. Please try again.");
         setRegistering(false);
         return;
       }
+      // If already registered, just sign in
+      try { await signInWithPassword(creds.email, creds.password); } catch { /* ignore */ }
     }
-    setOtpSuccess(`A 6-digit code was sent to ${creds.email}`);
-    setPhase("otp");
+    setPhase("details");
+    setStep(2);
     setRegistering(false);
   };
 
