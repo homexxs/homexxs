@@ -1,0 +1,46 @@
+{
+  "name": "Conversation",
+  "type": "object",
+  "properties": {
+    "client_email": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Brief topic e.g. 'Entry coordination for Deep Cleaning'"
+    },
+    "last_message": {
+      "type": "string"
+    },
+    "last_message_at": {
+      "type": "string"
+    },
+    "is_read_by_admin": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_read_by_client": {
+      "type": "boolean",
+      "default": false
+    },
+    "booking_id": {
+      "type": "string",
+      "description": "Optional linked booking"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "closed"
+      ],
+      "default": "open"
+    }
+  },
+  "required": [
+    "client_email",
+    "subject"
+  ]
+}

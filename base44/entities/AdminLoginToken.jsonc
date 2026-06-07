@@ -1,0 +1,32 @@
+{
+  "name": "AdminLoginToken",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "description": "Admin email address"
+    },
+    "token": {
+      "type": "string",
+      "description": "Unique token for magic link"
+    },
+    "used": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this token has been used"
+    },
+    "expires_at": {
+      "type": "string",
+      "description": "ISO timestamp when token expires (15 minutes)"
+    },
+    "verified_at": {
+      "type": "string",
+      "description": "ISO timestamp when token was verified"
+    }
+  },
+  "required": [
+    "email",
+    "token",
+    "expires_at"
+  ]
+}

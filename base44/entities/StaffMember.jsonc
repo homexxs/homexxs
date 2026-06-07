@@ -1,0 +1,58 @@
+{
+  "name": "StaffMember",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "role_title": {
+      "type": "string",
+      "description": "e.g. Cleaner, Fumigator, Team Lead"
+    },
+    "portal_role": {
+      "type": "string",
+      "enum": [
+        "staff_hr",
+        "staff_account",
+        "staff_operations",
+        "staff_managerial"
+      ],
+      "description": "Which department portal this staff member can access"
+    },
+    "specializations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Service types this staff handles"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "rating": {
+      "type": "number"
+    },
+    "total_jobs": {
+      "type": "number",
+      "default": 0
+    },
+    "completed_jobs": {
+      "type": "number",
+      "default": 0
+    },
+    "avatar_color": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "full_name",
+    "email"
+  ]
+}

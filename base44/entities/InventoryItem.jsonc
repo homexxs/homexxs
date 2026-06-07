@@ -1,0 +1,46 @@
+{
+  "name": "InventoryItem",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Item name e.g. Bleach, Mop, Pest Spray"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "cleaning_supplies",
+        "chemicals",
+        "equipment",
+        "protective_gear",
+        "packaging",
+        "other"
+      ],
+      "default": "cleaning_supplies"
+    },
+    "unit": {
+      "type": "string",
+      "description": "e.g. bottle, kg, roll, pair",
+      "default": "unit"
+    },
+    "stock_quantity": {
+      "type": "number",
+      "default": 0
+    },
+    "low_stock_threshold": {
+      "type": "number",
+      "default": 5,
+      "description": "Alert when stock falls below this"
+    },
+    "description": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

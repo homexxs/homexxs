@@ -1,0 +1,64 @@
+{
+  "name": "YearPlan",
+  "type": "object",
+  "properties": {
+    "year": {
+      "type": "number",
+      "description": "The year this plan covers e.g. 2026"
+    },
+    "title": {
+      "type": "string",
+      "description": "Plan title e.g. Home Care Schedule 2026"
+    },
+    "is_published": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this plan is visible to clients"
+    },
+    "published_at": {
+      "type": "string",
+      "description": "ISO timestamp when published"
+    },
+    "months": {
+      "type": "array",
+      "description": "Array of monthly schedule entries",
+      "items": {
+        "type": "object",
+        "properties": {
+          "month": {
+            "type": "number",
+            "description": "1-12"
+          },
+          "month_name": {
+            "type": "string"
+          },
+          "weeks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "week": {
+                  "type": "number"
+                },
+                "services": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Optional notes about this plan"
+    }
+  },
+  "required": [
+    "year",
+    "title"
+  ]
+}

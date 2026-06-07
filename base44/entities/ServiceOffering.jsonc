@@ -1,0 +1,37 @@
+{
+  "name": "ServiceOffering",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Emoji icon"
+    },
+    "price": {
+      "type": "number"
+    },
+    "duration_hours": {
+      "type": "number"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "color": {
+      "type": "string",
+      "description": "Tailwind color key e.g. blue"
+    }
+  },
+  "required": [
+    "name",
+    "price"
+  ]
+}

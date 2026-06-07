@@ -1,0 +1,63 @@
+{
+  "name": "Client",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "description": "Client email address"
+    },
+    "full_name": {
+      "type": "string",
+      "description": "Client full name"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Client phone number"
+    },
+    "address": {
+      "type": "string",
+      "description": "Client home address"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "suspended"
+      ],
+      "default": "active",
+      "description": "Client account status"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "self_registration",
+        "manual_entry"
+      ],
+      "default": "manual_entry",
+      "description": "How the client was added"
+    },
+    "registered_at": {
+      "type": "string",
+      "description": "ISO timestamp when client registered"
+    },
+    "total_bookings": {
+      "type": "number",
+      "default": 0,
+      "description": "Total number of bookings"
+    },
+    "total_spent": {
+      "type": "number",
+      "default": 0,
+      "description": "Total amount spent"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Admin notes about client"
+    }
+  },
+  "required": [
+    "email",
+    "full_name"
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "name": "Payment",
+  "type": "object",
+  "properties": {
+    "client_email": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "booking_id": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    },
+    "currency": {
+      "type": "string",
+      "default": "NGN"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "success",
+        "failed",
+        "refunded"
+      ],
+      "default": "pending"
+    },
+    "payment_method": {
+      "type": "string"
+    },
+    "transaction_ref": {
+      "type": "string"
+    },
+    "service_type": {
+      "type": "string"
+    },
+    "invoice_number": {
+      "type": "string"
+    },
+    "paid_at": {
+      "type": "string"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "Email of admin/account staff who approved payment"
+    },
+    "approved_at": {
+      "type": "string",
+      "description": "ISO timestamp when payment was approved"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Admin notes about this payment"
+    },
+    "receipt_url": {
+      "type": "string",
+      "description": "URL of uploaded payment receipt"
+    },
+    "payment_type": {
+      "type": "string",
+      "enum": [
+        "service",
+        "subscription"
+      ],
+      "default": "service",
+      "description": "Whether this payment is for a service booking or subscription"
+    },
+    "subscription_duration": {
+      "type": "string",
+      "description": "Subscription duration e.g. 1_month, 3_months"
+    }
+  },
+  "required": [
+    "booking_id",
+    "amount"
+  ]
+}

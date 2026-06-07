@@ -1,0 +1,74 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user",
+        "staff_hr",
+        "staff_account",
+        "staff_operations",
+        "staff_managerial"
+      ],
+      "default": "user"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string"
+    },
+    "plan": {
+      "type": "string",
+      "description": "Home plan key e.g. 3_bedroom_flat"
+    },
+    "subscription_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "pending"
+      ],
+      "default": "inactive",
+      "description": "Client subscription status"
+    },
+    "subscription_duration": {
+      "type": "string",
+      "enum": [
+        "1_month",
+        "3_months",
+        "6_months",
+        "1_year"
+      ],
+      "description": "Chosen subscription duration"
+    },
+    "subscription_amount": {
+      "type": "number",
+      "description": "Total amount paid for subscription"
+    },
+    "subscription_expires_at": {
+      "type": "string",
+      "description": "ISO timestamp when subscription expires"
+    },
+    "subscription_activated_by": {
+      "type": "string",
+      "description": "Email of admin/accountant who activated the subscription"
+    },
+    "subscription_activated_at": {
+      "type": "string",
+      "description": "ISO timestamp when subscription was activated"
+    }
+  },
+  "required": [
+    "phone",
+    "address",
+    "plan",
+    "subscription_duration",
+    "subscription_amount",
+    "subscription_expires_at",
+    "subscription_activated_by",
+    "subscription_activated_at"
+  ]
+}

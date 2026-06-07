@@ -1,0 +1,73 @@
+{
+  "name": "MaterialRequest",
+  "type": "object",
+  "properties": {
+    "staff_name": {
+      "type": "string"
+    },
+    "staff_email": {
+      "type": "string"
+    },
+    "booking_id": {
+      "type": "string",
+      "description": "Related job/booking ID"
+    },
+    "booking_date": {
+      "type": "string",
+      "description": "Date of the service job"
+    },
+    "service_type": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "description": "List of requested items with quantities",
+      "items": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string"
+          },
+          "item_name": {
+            "type": "string"
+          },
+          "quantity_requested": {
+            "type": "number"
+          },
+          "unit": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "partially_approved",
+        "rejected",
+        "fulfilled"
+      ],
+      "default": "pending"
+    },
+    "admin_notes": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Staff notes / reason for request"
+    },
+    "approved_by": {
+      "type": "string"
+    },
+    "approved_at": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "staff_name",
+    "staff_email",
+    "items"
+  ]
+}

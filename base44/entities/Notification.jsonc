@@ -1,0 +1,39 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "recipient_email": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "booking_confirmed",
+        "booking_reminder",
+        "payment_received",
+        "ticket_update",
+        "service_update",
+        "general"
+      ]
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "related_id": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "recipient_email",
+    "title",
+    "message",
+    "type"
+  ]
+}
