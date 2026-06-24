@@ -70,38 +70,42 @@ export default function SubscriptionStep({ user, planKey, onComplete, onSkip }) 
     setUploading(false);
   };
 
-  const handleSubmitPayment = async () => {
+const handleSubmitPayment = async () => {
     if (!receiptUrl || !dur) return;
     setSubmitting(true);
+    setUploadError(null);
 
-    // Create pending payment record
-    const ref = `SUB-${Date.now()}`;
-    await create(TABLES.payments, {
-      client_email: user.email,
-      client_name: user.full_name,
-      booking_id: ref,
-      amount: totalAmount,
-      currency: "NGN",
-      status: "pending",
-      payment_type: "subscription",
-      subscription_duration: selectedDuration,
-      transaction_ref: ref,
-      service_type: `Subscription - ${dur.label} (${planLabel})`,
-      receipt_url: receiptUrl,
-      notes: `Self-onboarding subscription. Plan: ${planLabel}, Duration: ${dur.label}, Amount: ₦${totalAmount.toLocaleString()}`,
-    });
+    try {
+      const ref = `SUB-${Date.now()}`;
+      await create(TABLES.payments, {
+        client_email: user.email,
+        client_name: user.full_name,
+        booking_id: ref,
+        amount: totalAmount,
+        currency: "NGN",
+        status: "pending",
+        payment_type: "subscription",
+        subscription_duration: selectedDuration,
+        transaction_ref: ref,
+        service_type: `Subscription - ${dur.label} (${planLabel})`,
+        receipt_url: receiptUrl,
+        notes: `Self-onboarding subscription. Plan: ${planLabel}, Duration: ${dur.label}, Amount: ₦${totalAmount.toLocaleString()}`,
+      });
 
-    // Update user subscription_status to "pending" (awaiting admin activation)
-    await updateMe({
-      subscription_status: "pending",
-      subscription_duration: selectedDuration,
-      subscription_amount: totalAmount,
-    });
+      await updateMe({
+        subscription_status: "pending",
+        subscription_duration: selectedDuration,
+        subscription_amount: totalAmount,
+      });
 
-    setDone(true);
-    setSubmitting(false);
-    // small delay then proceed to dashboard
-    setTimeout(() => onComplete("pending"), 1500);
+      setDone(true);
+      setTimeout(() => onComplete("pending"), 1500);
+    } catch (err) {
+      console.error("Submit payment failed:", err);
+      setUploadError(err?.message || "Could not submit. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleWhatsApp = () => {
