@@ -55,6 +55,7 @@ export default function SubscriptionStep({ user, planKey, onComplete, onSkip }) 
   const [receiptUrl, setReceiptUrl] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
 
   const dur = DURATIONS.find(d => d.key === selectedDuration);
   const totalAmount = dur ? calcAmount(basePrice, dur.months, dur.discount) : 0;
@@ -65,12 +66,19 @@ export default function SubscriptionStep({ user, planKey, onComplete, onSkip }) 
     const file = e.target.files[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await uploadFile({ file });
-    setReceiptUrl(file_url);
-    setUploading(false);
+    setUploadError(null);
+    try {
+      const { file_url } = await uploadFile({ file });
+      setReceiptUrl(file_url);
+    } catch (err) {
+      console.error("Receipt upload failed:", err);
+      setUploadError(err?.message || "Upload failed. Please try again.");
+    } finally {
+      setUploading(false);
+    }
   };
 
-const handleSubmitPayment = async () => {
+  const handleSubmitPayment = async () => {
     if (!receiptUrl || !dur) return;
     setSubmitting(true);
     setUploadError(null);
@@ -146,7 +154,7 @@ const handleSubmitPayment = async () => {
           return (
             <button
               key={d.key}
-              onClick={() => { setSelectedDuration(d.key); setPayMode(null); setReceiptUrl(null); }}
+              onClick={() => { setSelectedDuration(d.key); setPayMode(null); setReceiptUrl(null); setUploadError(null); }}
               className={`relative text-left p-4 rounded-2xl border-2 transition-all ${isSelected ? "border-purple-500 bg-purple-50" : "border-gray-100 bg-white hover:border-purple-200"}`}
             >
               {d.discount > 0 && (
@@ -220,15 +228,21 @@ const handleSubmitPayment = async () => {
 
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">Upload Payment Receipt *</label>
-            {!receiptUrl ? (
+            {!receiptUrl && (
               <label className="flex flex-col items-center gap-2 w-full border-2 border-dashed border-gray-200 rounded-2xl p-6 cursor-pointer hover:border-purple-300 hover:bg-purple-50 transition-all">
                 <Upload className="w-7 h-7 text-gray-300" />
                 <span className="text-sm text-gray-500 font-medium">Click to upload receipt</span>
-                <span className="text-xs text-gray-400">PNG, JPG, PDF accepted</span>
-                <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleUploadReceipt} />
+                <span className="text-xs text-gray-400">PNG, JPG, PDF accepted (max 5MB)</span>
+                <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleUploadReceipt} disabled={uploading} />
                 {uploading && <div className="w-5 h-5 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin mt-1" />}
               </label>
-            ) : (
+            )}
+            {uploadError && (
+              <div className="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                ⚠️ {uploadError}
+              </div>
+            )}
+            {receiptUrl && (
               <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-xl">
                 <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                 <span className="text-sm font-semibold text-green-800 flex-1">Receipt uploaded ✓</span>
@@ -246,7 +260,7 @@ const handleSubmitPayment = async () => {
           >
             {submitting ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Submitting...</> : <><ArrowRight className="w-4 h-4" /> Submit & Go to Dashboard</>}
           </button>
-          <button onClick={() => setPayMode(null)} className="w-full text-center text-xs text-gray-400 hover:text-gray-600">← Change payment method</button>
+          <button onClick={() => { setPayMode(null); setUploadError(null); }} className="w-full text-center text-xs text-gray-400 hover:text-gray-600">← Change payment method</button>
         </div>
       )}
 
