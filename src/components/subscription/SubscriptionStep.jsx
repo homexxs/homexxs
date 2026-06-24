@@ -1,8 +1,6 @@
-import { list, filter, create, update, remove, subscribe, TABLES } from '@/lib/db';
 import { updateMe } from '@/lib/auth-helpers';
-import { uploadFile } from '@/lib/integrations';
 import { useState } from "react";
-import { CheckCircle, MessageCircle, Upload, X, CreditCard, Phone, ArrowRight, SkipForward } from "lucide-react";
+import { MessageCircle, SkipForward } from "lucide-react";
 
 const PLAN_PRICES = {
   mini_flat: 10000,
@@ -31,13 +29,6 @@ const DURATIONS = [
   { key: "1_year",    label: "1 Year",    months: 12, discount: 0.10 },
 ];
 
-// HomeX bank account details
-const ACCOUNT_DETAILS = {
-  bank: "Stanbic Bank",
-  account_name: "Hold It Services Limited",
-  account_number: "0076802099",
-};
-
 const WHATSAPP_NUMBER = "2348067644782";
 
 function calcAmount(basePrice, months, discount) {
@@ -50,71 +41,11 @@ export default function SubscriptionStep({ user, planKey, onComplete, onSkip }) 
   const planLabel = PLAN_LABELS[planKey] || planKey?.replace(/_/g, " ");
 
   const [selectedDuration, setSelectedDuration] = useState(null);
-  const [payMode, setPayMode] = useState(null); // "pay_now" | "contact_accountant" | null
-  const [uploading, setUploading] = useState(false);
-  const [receiptUrl, setReceiptUrl] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
-  const [uploadError, setUploadError] = useState(null);
 
   const dur = DURATIONS.find(d => d.key === selectedDuration);
   const totalAmount = dur ? calcAmount(basePrice, dur.months, dur.discount) : 0;
   const rawAmount = dur ? basePrice * dur.months : 0;
   const savings = rawAmount - totalAmount;
-
-  const handleUploadReceipt = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    setUploadError(null);
-    try {
-      const { file_url } = await uploadFile({ file });
-      setReceiptUrl(file_url);
-    } catch (err) {
-      console.error("Receipt upload failed:", err);
-      setUploadError(err?.message || "Upload failed. Please try again.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleSubmitPayment = async () => {
-    if (!receiptUrl || !dur) return;
-    setSubmitting(true);
-    setUploadError(null);
-
-    try {
-      const ref = `SUB-${Date.now()}`;
-      await create(TABLES.payments, {
-        client_email: user.email,
-        client_name: user.full_name,
-        booking_id: ref,
-        amount: totalAmount,
-        currency: "NGN",
-        status: "pending",
-        payment_type: "subscription",
-        subscription_duration: selectedDuration,
-        transaction_ref: ref,
-        service_type: `Subscription - ${dur.label} (${planLabel})`,
-        receipt_url: receiptUrl,
-        notes: `Self-onboarding subscription. Plan: ${planLabel}, Duration: ${dur.label}, Amount: ₦${totalAmount.toLocaleString()}`,
-      });
-
-      await updateMe({
-        subscription_status: "pending",
-        subscription_duration: selectedDuration,
-        subscription_amount: totalAmount,
-      });
-
-      setDone(true);
-      setTimeout(() => onComplete("pending"), 1500);
-    } catch (err) {
-      console.error("Submit payment failed:", err);
-      setUploadError(err?.message || "Could not submit. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const handleWhatsApp = () => {
     const msg = `Hello HomeX! I just completed my onboarding and would like to activate my subscription.\n\n*Subscription Summary*\n👤 *Name:* ${user?.full_name || user?.email}\n📧 *Email:* ${user?.email}\n🏠 *Plan:* ${planLabel}\n📅 *Duration:* ${dur?.label}\n💳 *Amount:* ₦${totalAmount.toLocaleString()}${savings > 0 ? ` (saving ₦${savings.toLocaleString()})` : ""}\n\nKindly assist me with payment and account activation. Thank you!`;
@@ -124,16 +55,6 @@ export default function SubscriptionStep({ user, planKey, onComplete, onSkip }) 
       .then(() => onComplete("pending"))
       .catch(() => onComplete("pending"));
   };
-
-  if (done) return (
-    <div className="text-center py-8 space-y-4">
-      <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto">
-        <CheckCircle className="w-8 h-8 text-green-600" />
-      </div>
-      <h3 className="text-xl font-black text-gray-900">Receipt Submitted!</h3>
-      <p className="text-gray-500 text-sm">Our accountant will verify your payment and activate your account shortly.</p>
-    </div>
-  );
 
   return (
     <div className="space-y-6">
@@ -154,7 +75,7 @@ export default function SubscriptionStep({ user, planKey, onComplete, onSkip }) 
           return (
             <button
               key={d.key}
-              onClick={() => { setSelectedDuration(d.key); setPayMode(null); setReceiptUrl(null); setUploadError(null); }}
+              onClick={() => setSelectedDuration(d.key)}
               className={`relative text-left p-4 rounded-2xl border-2 transition-all ${isSelected ? "border-purple-500 bg-purple-50" : "border-gray-100 bg-white hover:border-purple-200"}`}
             >
               {d.discount > 0 && (
@@ -176,103 +97,32 @@ export default function SubscriptionStep({ user, planKey, onComplete, onSkip }) 
         })}
       </div>
 
-      {/* Payment Method */}
-      {selectedDuration && !payMode && (
+      {/* Payment - Contact Accountant only */}
+      {selectedDuration && (
         <div className="space-y-3">
           <div className="p-4 bg-purple-50 border border-purple-100 rounded-2xl text-center">
             <div className="text-sm text-gray-600">Total to pay</div>
             <div className="text-3xl font-black text-purple-700">₦{totalAmount.toLocaleString()}</div>
             {savings > 0 && <div className="text-xs text-green-600 font-semibold mt-1">You save ₦{savings.toLocaleString()} 🎉</div>}
           </div>
-          <p className="text-sm font-semibold text-gray-700 text-center">How would you like to pay?</p>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => setPayMode("pay_now")}
-              className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 border-gray-100 hover:border-purple-300 hover:bg-purple-50 transition-all"
-            >
-              <CreditCard className="w-6 h-6 text-purple-600" />
-              <div className="text-sm font-bold text-gray-800">Pay Now</div>
-              <div className="text-[10px] text-gray-400 text-center">Transfer & upload receipt</div>
-            </button>
-            <button
-              onClick={handleWhatsApp}
-              className="flex flex-col items-center gap-2 p-4 rounded-2xl border-2 border-gray-100 hover:border-green-300 hover:bg-green-50 transition-all"
-            >
-              <MessageCircle className="w-6 h-6 text-green-600" />
-              <div className="text-sm font-bold text-gray-800">Contact Accountant</div>
-              <div className="text-[10px] text-gray-400 text-center">Pay via WhatsApp</div>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Pay Now: Account Details + Receipt Upload */}
-      {payMode === "pay_now" && (
-        <div className="space-y-4">
-          <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-5">
-            <div className="text-xs font-bold text-indigo-600 uppercase tracking-wide mb-3">Bank Transfer Details</div>
-            <div className="space-y-2">
-              {[
-                { label: "Bank", value: ACCOUNT_DETAILS.bank },
-                { label: "Account Name", value: ACCOUNT_DETAILS.account_name },
-                { label: "Account Number", value: ACCOUNT_DETAILS.account_number },
-                { label: "Amount", value: `₦${totalAmount.toLocaleString()}` },
-              ].map(({ label, value }) => (
-                <div key={label} className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">{label}</span>
-                  <span className="text-sm font-bold text-gray-900">{value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">Upload Payment Receipt *</label>
-            {!receiptUrl && (
-              <label className="flex flex-col items-center gap-2 w-full border-2 border-dashed border-gray-200 rounded-2xl p-6 cursor-pointer hover:border-purple-300 hover:bg-purple-50 transition-all">
-                <Upload className="w-7 h-7 text-gray-300" />
-                <span className="text-sm text-gray-500 font-medium">Click to upload receipt</span>
-                <span className="text-xs text-gray-400">PNG, JPG, PDF accepted (max 5MB)</span>
-                <input type="file" accept="image/*,.pdf" className="hidden" onChange={handleUploadReceipt} disabled={uploading} />
-                {uploading && <div className="w-5 h-5 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin mt-1" />}
-              </label>
-            )}
-            {uploadError && (
-              <div className="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                ⚠️ {uploadError}
-              </div>
-            )}
-            {receiptUrl && (
-              <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-xl">
-                <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span className="text-sm font-semibold text-green-800 flex-1">Receipt uploaded ✓</span>
-                <button onClick={() => setReceiptUrl(null)} className="text-gray-400 hover:text-red-500">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-          </div>
-
           <button
-            onClick={handleSubmitPayment}
-            disabled={!receiptUrl || submitting}
-            className="w-full py-3.5 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold rounded-xl hover:from-purple-700 hover:to-indigo-700 disabled:opacity-40 transition-all flex items-center justify-center gap-2"
+            onClick={handleWhatsApp}
+            className="w-full flex flex-col items-center gap-2 p-5 rounded-2xl border-2 border-gray-100 hover:border-green-300 hover:bg-green-50 transition-all"
           >
-            {submitting ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Submitting...</> : <><ArrowRight className="w-4 h-4" /> Submit & Go to Dashboard</>}
+            <MessageCircle className="w-7 h-7 text-green-600" />
+            <div className="text-sm font-bold text-gray-800">Contact Accountant</div>
+            <div className="text-[10px] text-gray-400 text-center">Pay via WhatsApp</div>
           </button>
-          <button onClick={() => { setPayMode(null); setUploadError(null); }} className="w-full text-center text-xs text-gray-400 hover:text-gray-600">← Change payment method</button>
         </div>
       )}
 
       {/* Skip */}
-      {!payMode && (
-        <button
-          onClick={onSkip}
-          className="w-full flex items-center justify-center gap-2 py-2.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
-        >
-          <SkipForward className="w-4 h-4" /> Skip for now (account will be inactive)
-        </button>
-      )}
+      <button
+        onClick={onSkip}
+        className="w-full flex items-center justify-center gap-2 py-2.5 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+      >
+        <SkipForward className="w-4 h-4" /> Skip for now (account will be inactive)
+      </button>
     </div>
   );
 }
