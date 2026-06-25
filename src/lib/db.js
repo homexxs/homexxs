@@ -19,9 +19,13 @@ export const TABLES = {
 };
 
 function parseSort(sort) {
-  if (!sort) return { column: 'created_date', ascending: false };
+  if (!sort) return { column: 'created_at', ascending: false };
   const descending = sort.startsWith('-');
-  return { column: descending ? sort.slice(1) : sort, ascending: !descending };
+  let column = descending ? sort.slice(1) : sort;
+  // Legacy alias: the app was originally built referencing "created_date",
+  // but every table actually uses "created_at". Translate automatically.
+  if (column === 'created_date') column = 'created_at';
+  return { column, ascending: !descending };
 }
 
 function applyFilters(query, filters = {}) {
