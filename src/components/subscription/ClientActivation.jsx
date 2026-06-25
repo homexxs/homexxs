@@ -1,7 +1,7 @@
 import { list, filter, create, update, remove, subscribe, TABLES } from '@/lib/db';
 import { getMe } from '@/lib/auth-helpers';
 import { useState, useEffect } from "react";
-import { CheckCircle, XCircle, Clock, Search, Users } from "lucide-react";
+import { CheckCircle, XCircle, Trash2, Search, Users } from "lucide-react";
 import { format } from "date-fns";
 
 const DURATION_MONTHS = { "1_month": 1, "3_months": 3, "6_months": 6, "1_year": 12 };
@@ -18,6 +18,7 @@ export default function ClientActivation() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activating, setActivating] = useState(null);
+  const [deleting, setDeleting] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
@@ -47,7 +48,6 @@ export default function ClientActivation() {
       subscription_activated_at: new Date().toISOString(),
     });
 
-    // Mark related pending subscription payment as success (if one exists)
     const payments = await filter(TABLES.payments, { client_email: client.email, payment_type: "subscription", status: "pending" });
     if (payments.length > 0) {
       await update(TABLES.payments, payments[0].id, {
@@ -58,7 +58,6 @@ export default function ClientActivation() {
       });
     }
 
-    // Notify client
     await create(TABLES.notifications, {
       recipient_email: client.email,
       title: "🎉 Subscription Activated!",
@@ -82,6 +81,22 @@ export default function ClientActivation() {
     await update(TABLES.users, client.id, { subscription_status: "inactive" });
     setClients(prev => prev.map(c => c.id === client.id ? { ...c, subscription_status: "inactive" } : c));
     setActivating(null);
+  };
+
+  const handleDelete = async (client) => {
+    const ok = confirm(
+      `⚠️ Permanently delete ${client.full_name || client.email}?\n\nThis removes their profile from the client database. This cannot be undone.`
+    );
+    if (!ok) return;
+    setDeleting(client.id);
+    try {
+      await remove(TABLES.users, client.id);
+      setClients(prev => prev.filter(c => c.id !== client.id));
+    } catch (err) {
+      alert(`Could not delete this client: ${err?.message || "Unknown error"}`);
+    } finally {
+      setDeleting(null);
+    }
   };
 
   const filtered = clients.filter(c =>
@@ -142,7 +157,7 @@ export default function ClientActivation() {
                 {client.subscription_status !== "active" && (
                   <button
                     onClick={() => handleActivate(client)}
-                    disabled={activating === client.id}
+                    disabled={activating === client.id || deleting === client.id}
                     className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-green-50 text-green-700 border border-green-200 rounded-lg hover:bg-green-100 disabled:opacity-50 transition-colors"
                   >
                     {activating === client.id ? <div className="w-3 h-3 border border-green-400 border-t-green-700 rounded-full animate-spin" /> : <CheckCircle className="w-3 h-3" />}
@@ -154,12 +169,22 @@ export default function ClientActivation() {
                 {client.subscription_status === "active" && (
                   <button
                     onClick={() => handleDeactivate(client)}
-                    disabled={activating === client.id}
+                    disabled={activating === client.id || deleting === client.id}
                     className="flex items-center gap-1 px-3 py-1.5 text-xs font-semibold bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors"
                   >
                     <XCircle className="w-3 h-3" /> Deactivate
                   </button>
                 )}
+
+                {/* Delete */}
+                <button
+                  onClick={() => handleDelete(client)}
+                  disabled={deleting === client.id || activating === client.id}
+                  title="Delete client"
+                  className="flex items-center justify-center w-8 h-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg disabled:opacity-50 transition-colors"
+                >
+                  {deleting === client.id ? <div className="w-3.5 h-3.5 border border-red-300 border-t-red-600 rounded-full animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                </button>
               </div>
 
               {/* Expiry */}
