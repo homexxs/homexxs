@@ -1,7 +1,7 @@
 import { list, filter, create, update, remove, subscribe, TABLES } from '@/lib/db';
 import { getMe } from '@/lib/auth-helpers';
 import { useState, useEffect } from "react";
-import { CheckCircle, XCircle, Clock, Search, Users, Eye } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Search, Users } from "lucide-react";
 import { format } from "date-fns";
 
 const DURATION_MONTHS = { "1_month": 1, "3_months": 3, "6_months": 6, "1_year": 12 };
@@ -19,7 +19,6 @@ export default function ClientActivation() {
   const [search, setSearch] = useState("");
   const [activating, setActivating] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
-  const [receiptView, setReceiptView] = useState(null);
 
   useEffect(() => {
     const load = async () => {
@@ -48,7 +47,7 @@ export default function ClientActivation() {
       subscription_activated_at: new Date().toISOString(),
     });
 
-    // Mark related pending subscription payment as success
+    // Mark related pending subscription payment as success (if one exists)
     const payments = await filter(TABLES.payments, { client_email: client.email, payment_type: "subscription", status: "pending" });
     if (payments.length > 0) {
       await update(TABLES.payments, payments[0].id, {
@@ -83,12 +82,6 @@ export default function ClientActivation() {
     await update(TABLES.users, client.id, { subscription_status: "inactive" });
     setClients(prev => prev.map(c => c.id === client.id ? { ...c, subscription_status: "inactive" } : c));
     setActivating(null);
-  };
-
-  const fetchReceiptForClient = async (client) => {
-    const payments = await filter(TABLES.payments, { client_email: client.email, payment_type: "subscription" });
-    const withReceipt = payments.find(p => p.receipt_url);
-    setReceiptView(withReceipt?.receipt_url || null);
   };
 
   const filtered = clients.filter(c =>
@@ -145,17 +138,6 @@ export default function ClientActivation() {
                   {client.subscription_status === "active" ? "ACTIVE" : client.subscription_status === "pending" ? "PENDING" : "INACTIVE"}
                 </span>
 
-                {/* View Receipt */}
-                {client.subscription_status !== "inactive" && (
-                  <button
-                    onClick={async () => { await fetchReceiptForClient(client); }}
-                    className="p-1.5 rounded-lg text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
-                    title="View receipt"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                  </button>
-                )}
-
                 {/* Activate */}
                 {client.subscription_status !== "active" && (
                   <button
@@ -190,27 +172,6 @@ export default function ClientActivation() {
           ))}
         </div>
       </div>
-
-      {/* Receipt viewer */}
-      {receiptView !== undefined && receiptView !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-6" onClick={() => setReceiptView(undefined)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-4" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-bold text-gray-900 text-sm">Payment Receipt</span>
-              <button onClick={() => setReceiptView(undefined)} className="text-gray-400 hover:text-gray-600">✕</button>
-            </div>
-            <img src={receiptView} alt="Receipt" className="w-full rounded-xl object-contain max-h-96" />
-          </div>
-        </div>
-      )}
-      {receiptView === null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setReceiptView(undefined)}>
-          <div className="bg-white rounded-2xl p-6 shadow-xl text-center">
-            <p className="text-gray-500 text-sm">No receipt uploaded for this client.</p>
-            <button onClick={() => setReceiptView(undefined)} className="mt-4 px-4 py-2 bg-gray-100 rounded-xl text-sm">Close</button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
